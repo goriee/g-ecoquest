@@ -135,15 +135,6 @@ function QuestsScreen({ navigation }) {
           <Text style={[styles.h1, { color: colors.textMain }]}>Activity</Text>
         </View>
 
-        {/* --- DAILY CHALLENGE BANNER --- */}
-        <View style={{ backgroundColor: colors.warning + '20', borderRadius: 12, padding: 16, marginTop: 16, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: colors.warning }}>
-          <Flame color={colors.warning} size={32} style={{ marginRight: 12 }} />
-          <View style={{ flex: 1 }}>
-             <Text style={[styles.h2, { color: colors.warning, fontSize: 16 }]}>Daily Challenge: Streak Time!</Text>
-             <Text style={[styles.p, { color: colors.textMain, fontSize: 12, marginTop: 4 }]}>Verify 2 cleanups today for a 2x point multiplier! (0/2)</Text>
-          </View>
-        </View>
-
         <View style={{ flexDirection: 'row', marginTop: 16, backgroundColor: colors.bgBase, borderRadius: 8, padding: 4 }}>
            <TouchableOpacity style={{ flex: 1, paddingVertical: 8, alignItems: 'center', backgroundColor: tab === 'Quests' ? colors.primary : 'transparent', borderRadius: 6 }} onPress={() => setTab('Quests')}>
              <Text style={{ fontFamily: 'Inter_700Bold', color: tab === 'Quests' ? '#FFF' : colors.textMuted }}>Quests</Text>
@@ -196,12 +187,12 @@ function QuestsScreen({ navigation }) {
                    <Text style={{color: colors.textMuted, fontFamily: 'Inter_700Bold'}}>After</Text>
                 </View>
              </View>
-             <View style={{flexDirection: 'row', gap: 12}}>
-               <TouchableOpacity style={[styles.btn, { backgroundColor: colors.danger, flex: 1 }]} onPress={() => Alert.alert('Voted', 'You voted UR cooked!')}>
-                 <Text style={styles.btnText}>UR cooked</Text>
+              <View style={{flexDirection: 'row', gap: 12}}>
+               <TouchableOpacity style={[styles.btn, { backgroundColor: colors.danger, flex: 1 }]} onPress={() => Alert.alert('Recorded', 'You have rejected this verification request.')}>
+                 <Text style={styles.btnText}>Reject</Text>
                </TouchableOpacity>
-               <TouchableOpacity style={[styles.btn, { backgroundColor: colors.success, flex: 1 }]} onPress={() => Alert.alert('Voted', 'You voted U cooked!')}>
-                 <Text style={styles.btnText}>U cooked</Text>
+               <TouchableOpacity style={[styles.btn, { backgroundColor: colors.success, flex: 1 }]} onPress={() => Alert.alert('Recorded', 'You have approved this verification request.')}>
+                 <Text style={styles.btnText}>Approve</Text>
                </TouchableOpacity>
              </View>
              <Text style={[styles.p, { color: colors.textMuted, textAlign: 'center', marginTop: 12, fontSize: 12 }]}>1 / 3 Votes Cast</Text>
@@ -223,16 +214,16 @@ function QuestDetailsScreen({ navigation, route }) {
 
   const handleTip = () => {
     Alert.alert(
-      "Fund this Quest",
-      "Add ₱50 to the bounty to incentivize cleanup?",
+      "Contribute Funds",
+      "Would you like to allocate ₱50 to this bounty to prioritize the cleanup operation?",
       [
         { text: "Cancel", style: "cancel" },
         { 
-          text: "Add ₱50", 
+          text: "Contribute ₱50", 
           onPress: () => {
             const updated = { ...bounty, reward: bounty.reward + 50 };
             setBounty(updated);
-            Alert.alert("Success", "₱50 added. The new bounty is ₱" + updated.reward);
+            Alert.alert("Confirmed", "₱50 successfully allocated. New bounty limit is ₱" + updated.reward);
             // Updating the map params behind the scenes
             navigation.navigate('MainTabs', { screen: 'Map', params: { updatedBounty: updated } });
           }
@@ -280,7 +271,7 @@ function QuestDetailsScreen({ navigation, route }) {
           onPress={handleTip}
         >
           <Heart color={colors.danger} size={20} />
-          <Text style={[styles.btnText, { color: colors.textMain }]}> Boost Reward (+₱50)</Text>
+          <Text style={[styles.btnText, { color: colors.textMain }]}> Allocate Funds (+₱50)</Text>
         </TouchableOpacity>
 
         <Text style={[styles.h2, { color: colors.textMain, marginBottom: 12 }]}>Location</Text>
@@ -374,7 +365,7 @@ function CompleteQuestScreen({ navigation, route }) {
     setTimeout(() => {
       setIsSubmitting(false);
       const updated = { ...bounty, status: 'verifying' };
-      Alert.alert('Verification Pending', `Your photo has been uploaded! Peers will verify your cleanup before releasing ₱${bounty.reward} and ${bounty.pts} Eco-Points.`, [
+      Alert.alert('Verification Pending', `Media uploaded successfully. Community protocol requires review before allocating ₱${bounty.reward} and ${bounty.pts} points.`, [
         { text: 'Back to Map', onPress: () => navigation.navigate('MainTabs', { screen: 'Map', params: { updatedBounty: updated } }) }
       ]);
     }, 1500);
@@ -383,7 +374,7 @@ function CompleteQuestScreen({ navigation, route }) {
   return (
     <View style={[styles.container, { backgroundColor: colors.bgBase, padding: 24 }]}>
       <Text style={[styles.h1, { color: colors.textMain, marginBottom: 8 }]}>Verify Cleanup</Text>
-      <Text style={[styles.p, { color: colors.textMuted, marginBottom: 20 }]}>Take an "After" photo. Peers will review it to release funds.</Text>
+      <Text style={[styles.p, { color: colors.textMuted, marginBottom: 20 }]}>Capture post-operation media. Community review is required for resource allocation.</Text>
       
       {!photo ? (
          <View style={styles.cameraBox}>
@@ -470,8 +461,8 @@ function ReportScreen({ navigation }) {
     setIsSubmitting(true);
     setTimeout(() => {
       setIsSubmitting(false);
-      Alert.alert('Pin Dropped!', `Your ${size} report has been added to the map.`, [
-        { text: 'Sweet!', onPress: () => {
+      Alert.alert('Coordinate Registered', `The ${size}-tier anomaly has been logged to the network.`, [
+        { text: 'Confirmed', onPress: () => {
             setPhoto(null);
             setReward('');
             setDesc('');
@@ -486,11 +477,11 @@ function ReportScreen({ navigation }) {
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.bgBase }]}>
       <View style={[styles.appHeader, { backgroundColor: colors.bgCard, borderBottomColor: colors.border }]}>
-        <Text style={[styles.h1, { color: colors.textMain }]}>Drop a Pin</Text>
+        <Text style={[styles.h1, { color: colors.textMain }]}>Register Anomaly</Text>
       </View>
       <View style={{ padding: 20 }}>
-        <Text style={[styles.h2, { color: colors.textMain, marginBottom: 8 }]}>Capture the Mess</Text>
-        <Text style={[styles.p, { color: colors.textMuted, marginBottom: 20 }]}>Take a clear "Before" photo. GPS coordinates will be attached automatically.</Text>
+        <Text style={[styles.h2, { color: colors.textMain, marginBottom: 8 }]}>Visual Evidence</Text>
+        <Text style={[styles.p, { color: colors.textMuted, marginBottom: 20 }]}>Provide a clear pre-operation visual. Geolocation data is synchronized automatically.</Text>
         
         {!photo ? (
            <View style={styles.cameraBox}>
@@ -647,8 +638,7 @@ function ProfileScreen({ navigation }) {
           {[
             { name: 'First Blood', icon: <Target color="#FFF" size={24}/>, bg: colors.danger },
             { name: 'River Guardian', icon: <Droplet color="#FFF" size={24}/>, bg: '#0EA5E9' },
-            { name: 'Streak 🔥', icon: <Flame color="#FFF" size={24}/>, bg: colors.warning },
-            { name: 'Whale', icon: <Award color="#FFF" size={24}/>, bg: colors.success },
+            { name: 'Land Bearer', icon: <Leaf color="#FFF" size={24}/>, bg: colors.success },
             { name: 'Eagle Eye', icon: <CheckCircle color="#FFF" size={24}/>, bg: '#8B5CF6' },
           ].map((badge, i) => (
              <View key={i} style={{ alignItems: 'center', marginRight: 16 }}>
@@ -661,21 +651,31 @@ function ProfileScreen({ navigation }) {
         </ScrollView>
 
         {/* --- IMPACT DASHBOARD --- */}
-        <Text style={[styles.h2, { color: colors.textMain, marginTop: 32, marginBottom: 16 }]}>My Real-World Impact</Text>
+        <Text style={[styles.h2, { color: colors.textMain, marginTop: 32, marginBottom: 16 }]}>Real-World Impact metrics</Text>
         <View style={{ flexDirection: 'row', gap: 12, marginBottom: 16 }}>
           <View style={[styles.statBox, { backgroundColor: colors.bgCard, borderColor: colors.border, flex: 1 }]}>
-            <ShoppingBag color={colors.primary} size={28}/>
-            <Text style={[styles.h1, { color: colors.textMain, marginTop: 12 }]}>~25 kg</Text>
-            <Text style={[styles.p, { color: colors.textMuted, fontSize: 12 }]}>Waste Cleaned</Text>
+            <Droplet color={colors.primary} size={28}/>
+            <Text style={[styles.h1, { color: colors.textMain, marginTop: 12 }]}>45 L</Text>
+            <Text style={[styles.p, { color: colors.textMuted, fontSize: 12 }]}>Water Saved</Text>
           </View>
           <View style={[styles.statBox, { backgroundColor: colors.bgCard, borderColor: colors.border, flex: 1 }]}>
             <Leaf color={colors.success} size={28}/>
-            <Text style={[styles.h1, { color: colors.textMain, marginTop: 12 }]}>5</Text>
-            <Text style={[styles.p, { color: colors.textMuted, fontSize: 12 }]}>Habitats Saved</Text>
+            <Text style={[styles.h1, { color: colors.textMain, marginTop: 12 }]}>12 m²</Text>
+            <Text style={[styles.p, { color: colors.textMuted, fontSize: 12 }]}>Land Saved</Text>
           </View>
         </View>
 
-        <View style={{flexDirection: 'row', justifyContent: 'space-between', marginTop: 16}}>
+        {/* --- CONTRIBUTION HEATMAP --- */}
+        <Text style={[styles.h2, { color: colors.textMain, marginTop: 16, marginBottom: 12 }]}>Operation History</Text>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginBottom: 24, backgroundColor: colors.bgCard, padding: 12, borderRadius: 12, borderWidth: 1, borderColor: colors.border }}>
+           {Array.from({length: 84}).map((_, i) => {
+              const intensity = Math.random();
+              const bgColor = intensity > 0.85 ? colors.success : intensity > 0.6 ? colors.success + '90' : intensity > 0.3 ? colors.success + '40' : colors.border;
+              return <View key={i} style={{ width: 14, height: 14, borderRadius: 3, backgroundColor: bgColor }} />
+           })}
+        </View>
+
+        <View style={{flexDirection: 'row', justifyContent: 'space-between', marginTop: 8}}>
            {[{ label: 'Eco-Points', val: '1,240', icon: <Award color={colors.success} size={24}/> }, { label: 'Cleanups', val: '14', icon: <Camera color={colors.primary} size={24}/> }, { label: 'Trust Score', val: '98%', icon: <Shield color={colors.warning} size={24}/> }].map((stat, i) => (
              <View key={i} style={[styles.statBox, { backgroundColor: colors.bgCard, borderColor: colors.border }]}>
                 {stat.icon}<Text style={[styles.h2, { color: colors.textMain, marginTop: 8 }]}>{stat.val}</Text><Text style={[styles.p, { color: colors.textMuted, fontSize: 12 }]}>{stat.label}</Text>
