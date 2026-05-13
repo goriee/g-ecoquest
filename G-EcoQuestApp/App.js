@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, createContext, useContext } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, Dimensions, ScrollView, Image, ActivityIndicator, Alert, Switch } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Dimensions, ScrollView, Image, ActivityIndicator, Alert, Switch, TextInput } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { CameraView, useCameraPermissions } from 'expo-camera';
@@ -515,6 +515,12 @@ function ProfileScreen() {
              </View>
            ))}
         </View>
+
+        <TouchableOpacity style={[styles.btn, { backgroundColor: colors.success, marginTop: 24 }]}>
+           <Store color="#FFF" size={20} />
+           <Text style={styles.btnText}> Exchange Points</Text>
+        </TouchableOpacity>
+
         <Text style={[styles.h2, { color: colors.textMain, marginTop: 32, marginBottom: 16 }]}>Settings</Text>
         {['Edit Profile', 'Payment & Payouts', 'Notifications', 'Help & Support'].map((item, i) => (
           <TouchableOpacity key={i} style={[styles.settingRow, { backgroundColor: colors.bgCard, borderBottomColor: colors.border }]}>
