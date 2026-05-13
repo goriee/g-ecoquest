@@ -50,20 +50,25 @@ const getSizeColor = (size, fallback) => {
 
 // --- MOCK DATA (Naga City, PH) ---
 const INITIAL_QUESTS = [
-  { id: 1, lat: 13.6245, lon: 123.1850, title: 'Plaza Quince Martires Litter', size: 'Large', pts: 350, reward: 20, status: 'active', photoUri: 'https://images.unsplash.com/photo-1611284446314-60a58ac0deb9?q=80&w=400&auto=format&fit=crop' },
-  { id: 2, lat: 13.6220, lon: 123.1830, title: 'Naga Public Market Cleanup', size: 'Hazardous', pts: 480, reward: 10, status: 'active', photoUri: 'https://images.unsplash.com/photo-1518005020951-eccb494ad742?q=80&w=400&auto=format&fit=crop' },
-  { id: 3, lat: 13.6260, lon: 123.1880, title: 'Bicol River Bank Plastics', size: 'Small', pts: 80, reward: 5, status: 'active', photoUri: null },
+  { id: 1, lat: 13.6245, lon: 123.1850, address: 'Plaza Quince Martires, Centro', title: 'Plaza Quince Martires Litter', desc: 'Lots of scattered plastic wrappers and cups near the monument benches.', size: 'Large', pts: 350, reward: 200, status: 'active', photoUri: 'https://images.unsplash.com/photo-1611284446314-60a58ac0deb9?q=80&w=400&auto=format&fit=crop' },
+  { id: 2, lat: 13.6220, lon: 123.1830, address: 'Naga Public Market, General Luna', title: 'Naga Public Market Cleanup', desc: 'Severe blockage of drainage with hazardous bio-waste and plastics.', size: 'Hazardous', pts: 480, reward: 500, status: 'active', photoUri: 'https://images.unsplash.com/photo-1518005020951-eccb494ad742?q=80&w=400&auto=format&fit=crop' },
+  { id: 3, lat: 13.6260, lon: 123.1880, address: 'Bicol River Bank, Tabuco', title: 'Bicol River Bank Plastics', desc: 'A few plastic bottles washed up on the river bank.', size: 'Small', pts: 80, reward: 50, status: 'active', photoUri: null },
 ];
 
 const PARTNER_STORES = [
-  { id: 101, lat: 13.6250, lon: 123.1870, title: 'Eco Café Naga', desc: 'Partner Store! Exchange your Eco-Points for delicious coffee, pasties, and sustainable goods right here in the city.', offers: ['500 pts = Free Iced Coffee', '800 pts = Bamboo Straw Set', '1500 pts = Reusable Tote Bag'] }
+  { id: 101, lat: 13.6250, lon: 123.1870, title: 'Eco Café Naga', desc: 'Partner Store! Exchange your Eco-Points for delicious coffee, pastries, and sustainable goods right here in the city.', offers: ['500 pts = Free Iced Coffee', '800 pts = Bamboo Straw Set', '1500 pts = Reusable Tote Bag'] }
 ];
 
-const LEADERBOARD = [
-  { id: 1, name: 'Alex EarthSaver', pts: 3450, rank: 1, avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=100' },
-  { id: 2, name: 'Sarah Green', pts: 2890, rank: 2, avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=100' },
-  { id: 3, name: 'EcoWarrior99', pts: 2100, rank: 3, avatar: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?q=80&w=100' },
-  { id: 4, name: 'CleanCityGuy', pts: 1850, rank: 4, avatar: 'https://images.unsplash.com/photo-1527980965255-d3b416303d12?q=80&w=100' },
+const TOP_CLEANERS = [
+  { id: 1, name: 'Juan Dela Cruz', pts: 3450, rank: 1, avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=100' },
+  { id: 2, name: 'Maria Santos', pts: 2890, rank: 2, avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=100' },
+  { id: 3, name: 'Jose Rizal', pts: 2100, rank: 3, avatar: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?q=80&w=100' },
+];
+
+const TOP_SCOUTS = [
+  { id: 4, name: 'Andres Bonifacio', pts: 1850, rank: 1, avatar: 'https://images.unsplash.com/photo-1527980965255-d3b416303d12?q=80&w=100' },
+  { id: 5, name: 'Gabriela Silang', pts: 1420, rank: 2, avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=100' },
+  { id: 6, name: 'Lapu-Lapu', pts: 950, rank: 3, avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=100' },
 ];
 
 // --- SCREENS ---
@@ -118,17 +123,28 @@ function MapScreen({ navigation, route }) {
 
 function QuestsScreen({ navigation }) {
   const { colors } = useContext(ThemeContext);
+  const [filter, setFilter] = useState('All');
+  
+  const filteredQuests = filter === 'All' ? INITIAL_QUESTS : INITIAL_QUESTS.filter(q => q.size === filter);
+  
   return (
     <View style={[styles.container, { backgroundColor: colors.bgBase }]}>
       <View style={[styles.appHeader, { backgroundColor: colors.bgCard, borderBottomColor: colors.border }]}>
         <Text style={[styles.h1, { color: colors.textMain }]}>Active Quests</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 12 }}>
+          {['All', 'Small', 'Medium', 'Large', 'Hazardous'].map(f => (
+            <TouchableOpacity key={f} onPress={() => setFilter(f)} style={{ paddingHorizontal: 16, paddingVertical: 6, borderRadius: 16, backgroundColor: filter === f ? colors.primary : colors.primaryLight, marginRight: 8 }}>
+              <Text style={{ fontFamily: 'Inter_700Bold', color: filter === f ? '#FFF' : colors.primary }}>{f}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
       </View>
       <ScrollView contentContainerStyle={{ padding: 20 }}>
-        {INITIAL_QUESTS.map(q => (
+        {filteredQuests.map(q => (
           <View key={q.id} style={[styles.card, { backgroundColor: colors.bgCard, borderColor: colors.border }]}>
             <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12}}>
                <Text style={[styles.h2, { color: colors.textMain, flex: 1 }]}>{q.title}</Text>
-               <View style={[styles.tag, { backgroundColor: colors.primaryLight }]}><Text style={[styles.tagText, { color: colors.primary }]}>${q.reward}</Text></View>
+               <View style={[styles.tag, { backgroundColor: colors.primaryLight }]}><Text style={[styles.tagText, { color: colors.primary }]}>₱{q.reward}</Text></View>
             </View>
             <View style={{flexDirection: 'row', alignItems: 'center', marginBottom: 16}}>
                <View style={[styles.tag, { backgroundColor: getSizeColor(q.size, colors.primary) + '20', marginRight: 12 }]}>
@@ -158,15 +174,15 @@ function QuestDetailsScreen({ navigation, route }) {
   const handleTip = () => {
     Alert.alert(
       "Fund this Quest",
-      "Add $5 to the bounty to incentivize cleanup?",
+      "Add ₱50 to the bounty to incentivize cleanup?",
       [
         { text: "Cancel", style: "cancel" },
         { 
-          text: "Add $5", 
+          text: "Add ₱50", 
           onPress: () => {
-            const updated = { ...bounty, reward: bounty.reward + 5 };
+            const updated = { ...bounty, reward: bounty.reward + 50 };
             setBounty(updated);
-            Alert.alert("Success", "$5 added. The new bounty is $" + updated.reward);
+            Alert.alert("Success", "₱50 added. The new bounty is ₱" + updated.reward);
             // Updating the map params behind the scenes
             navigation.navigate('MainTabs', { screen: 'Map', params: { updatedBounty: updated } });
           }
@@ -191,13 +207,14 @@ function QuestDetailsScreen({ navigation, route }) {
              <Text style={[styles.tagText, { color: getSizeColor(bounty.size, colors.primary) }]}>{bounty.size} Hazard Level</Text>
           </View>
         </View>
-        <Text style={[styles.h1, { color: colors.textMain, marginBottom: 16 }]}>{bounty.title}</Text>
+        <Text style={[styles.h1, { color: colors.textMain, marginBottom: 8 }]}>{bounty.title}</Text>
+        <Text style={[styles.p, { color: colors.textMuted, marginBottom: 16 }]}>{bounty.desc || "No description provided."}</Text>
         
         <View style={[{ flexDirection: 'row', alignItems: 'center', padding: 16, borderRadius: 16, backgroundColor: colors.primaryLight, marginBottom: 16 }]}>
            <DollarSign size={24} color={colors.primary} />
            <View style={{marginLeft: 12}}>
              <Text style={[styles.p, { color: colors.textMain, opacity: 0.8 }]}>Current Bounty</Text>
-             <Text style={[styles.h1, { color: colors.primary }]}>${bounty.reward}</Text>
+             <Text style={[styles.h1, { color: colors.primary }]}>₱{bounty.reward}</Text>
            </View>
         </View>
 
@@ -206,13 +223,13 @@ function QuestDetailsScreen({ navigation, route }) {
           onPress={handleTip}
         >
           <Heart color={colors.danger} size={20} />
-          <Text style={[styles.btnText, { color: colors.textMain }]}> Boost Reward (+$5)</Text>
+          <Text style={[styles.btnText, { color: colors.textMain }]}> Boost Reward (+₱50)</Text>
         </TouchableOpacity>
 
         <Text style={[styles.h2, { color: colors.textMain, marginBottom: 12 }]}>Location</Text>
         <View style={[styles.locationBanner, { backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.border }]}>
            <Navigation color={colors.primary} size={20} />
-           <Text style={[styles.locationText, { color: colors.textMain }]}>{bounty.lat.toFixed(5)}, {bounty.lon.toFixed(5)}</Text>
+           <Text style={[styles.locationText, { color: colors.textMain, flex: 1 }]} numberOfLines={2}>{bounty.address || `${bounty.lat.toFixed(5)}, ${bounty.lon.toFixed(5)}`}</Text>
         </View>
 
         <TouchableOpacity 
@@ -248,8 +265,8 @@ function CompleteQuestScreen({ navigation, route }) {
     setIsSubmitting(true);
     setTimeout(() => {
       setIsSubmitting(false);
-      const updated = { ...bounty, status: 'completed' };
-      Alert.alert('Cleanup Verified!', `Amazing! $${bounty.reward} and ${bounty.pts} Eco-Points added to your profile.`, [
+      const updated = { ...bounty, status: 'verifying' };
+      Alert.alert('Verification Pending', `Your photo has been uploaded! Peers will verify your cleanup before releasing ₱${bounty.reward} and ${bounty.pts} Eco-Points.`, [
         { text: 'Back to Map', onPress: () => navigation.navigate('MainTabs', { screen: 'Map', params: { updatedBounty: updated } }) }
       ]);
     }, 1500);
@@ -327,6 +344,7 @@ function ReportScreen({ navigation }) {
   const [permission, requestPermission] = useCameraPermissions();
   const [photo, setPhoto] = useState(null);
   const [size, setSize] = useState('Medium');
+  const [reward, setReward] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const cameraRef = useRef(null);
 
@@ -346,6 +364,7 @@ function ReportScreen({ navigation }) {
       Alert.alert('Pin Dropped!', `Your ${size} report has been added to the map.`, [
         { text: 'Sweet!', onPress: () => {
             setPhoto(null);
+            setReward('');
             navigation.navigate('MainTabs', { screen: 'Map' });
         } }
       ]);
@@ -398,6 +417,25 @@ function ReportScreen({ navigation }) {
           ))}
         </View>
 
+        <Text style={[styles.h2, { color: colors.textMain, marginBottom: 12 }]}>Optional Reward</Text>
+        <TextInput
+          placeholder="e.g. 100"
+          placeholderTextColor={colors.textMuted}
+          keyboardType="numeric"
+          value={reward}
+          onChangeText={setReward}
+          style={{
+            backgroundColor: colors.bgCard,
+            borderColor: colors.border,
+            borderWidth: 1,
+            borderRadius: 12,
+            padding: 16,
+            color: colors.textMain,
+            fontFamily: 'Inter_400Regular',
+            marginBottom: 20
+          }}
+        />
+
         <View style={[styles.locationBanner, { backgroundColor: colors.primaryLight }]}><Navigation color={colors.primary} size={20} /><Text style={[styles.locationText, { color: colors.primary }]}>GPS Locked to current location</Text></View>
         
         <TouchableOpacity 
@@ -412,15 +450,35 @@ function ReportScreen({ navigation }) {
 
 function RanksScreen() {
   const { colors } = useContext(ThemeContext);
+  const [tab, setTab] = useState('Cleaners');
+
+  const currentList = tab === 'Cleaners' ? TOP_CLEANERS : TOP_SCOUTS;
+
   return (
     <View style={[styles.container, { backgroundColor: colors.bgBase }]}>
-      <View style={[styles.appHeader, { backgroundColor: colors.bgCard, borderBottomColor: colors.border }]}><Text style={[styles.h1, { color: colors.textMain }]}>Leaderboard</Text></View>
+      <View style={[styles.appHeader, { backgroundColor: colors.bgCard, borderBottomColor: colors.border }]}>
+        <Text style={[styles.h1, { color: colors.textMain }]}>Leaderboard</Text>
+        <View style={{ flexDirection: 'row', marginTop: 12, backgroundColor: colors.bgBase, borderRadius: 8, padding: 4 }}>
+           <TouchableOpacity 
+             style={{ flex: 1, paddingVertical: 8, alignItems: 'center', backgroundColor: tab === 'Cleaners' ? colors.primary : 'transparent', borderRadius: 6 }} 
+             onPress={() => setTab('Cleaners')}
+           >
+             <Text style={{ fontFamily: 'Inter_700Bold', color: tab === 'Cleaners' ? '#FFF' : colors.textMuted }}>Cleaners</Text>
+           </TouchableOpacity>
+           <TouchableOpacity 
+             style={{ flex: 1, paddingVertical: 8, alignItems: 'center', backgroundColor: tab === 'Scouts' ? colors.primary : 'transparent', borderRadius: 6 }} 
+             onPress={() => setTab('Scouts')}
+           >
+             <Text style={{ fontFamily: 'Inter_700Bold', color: tab === 'Scouts' ? '#FFF' : colors.textMuted }}>Scouts</Text>
+           </TouchableOpacity>
+        </View>
+      </View>
       <ScrollView contentContainerStyle={{ padding: 20 }}>
         <View style={[styles.card, { backgroundColor: colors.primaryLight, borderColor: colors.primary, marginBottom: 24 }]}>
-           <Text style={[styles.h2, { color: colors.primary, textAlign: 'center' }]}>Your Rank: #142</Text>
+           <Text style={[styles.h2, { color: colors.primary, textAlign: 'center' }]}>Your Rank ({tab}): #142</Text>
            <Text style={[styles.p, { color: colors.primary, textAlign: 'center' }]}>1,240 pts — Earth Scavenger</Text>
         </View>
-        {LEADERBOARD.map(user => (
+        {currentList.map(user => (
           <View key={user.id} style={[styles.rankRow, { borderBottomColor: colors.border }]}>
              <Text style={[styles.rankNum, { color: user.rank <= 3 ? colors.warning : colors.textMuted }]}>#{user.rank}</Text>
              <Image source={{uri: user.avatar}} style={styles.rankAvar} />
