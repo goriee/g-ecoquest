@@ -33,10 +33,20 @@ const darkColors = {
 
 const ThemeContext = createContext();
 
+const getSizeColor = (size, fallback) => {
+  switch (size) {
+    case 'Hazardous': return '#DC2626'; // Red
+    case 'Large': return '#F97316';     // Orange
+    case 'Medium': return '#F59E0B';    // Yellow
+    case 'Small': return '#3B82F6';     // Blue
+    default: return fallback;
+  }
+};
+
 // --- MOCK DATA (Naga City, PH) ---
 const INITIAL_QUESTS = [
   { id: 1, lat: 13.6245, lon: 123.1850, title: 'Plaza Quince Martires Litter', size: 'Large', pts: 350, reward: 20, status: 'active', photoUri: 'https://images.unsplash.com/photo-1611284446314-60a58ac0deb9?q=80&w=400&auto=format&fit=crop' },
-  { id: 2, lat: 13.6220, lon: 123.1830, title: 'Naga Public Market Cleanup', size: 'Medium', pts: 180, reward: 10, status: 'active', photoUri: 'https://images.unsplash.com/photo-1518005020951-eccb494ad742?q=80&w=400&auto=format&fit=crop' },
+  { id: 2, lat: 13.6220, lon: 123.1830, title: 'Naga Public Market Cleanup', size: 'Hazardous', pts: 480, reward: 10, status: 'active', photoUri: 'https://images.unsplash.com/photo-1518005020951-eccb494ad742?q=80&w=400&auto=format&fit=crop' },
   { id: 3, lat: 13.6260, lon: 123.1880, title: 'Bicol River Bank Plastics', size: 'Small', pts: 80, reward: 5, status: 'active', photoUri: null },
 ];
 
@@ -69,7 +79,7 @@ function MapScreen({ navigation, route }) {
       >
         {bounties.map(q => (
           <Marker key={q.id} coordinate={{ latitude: q.lat, longitude: q.lon }} onPress={() => navigation.navigate('QuestDetails', { bounty: q })}>
-             <View style={[styles.pin, { backgroundColor: q.status === 'completed' ? colors.textMuted : colors.danger, borderColor: colors.bgCard }]}>
+             <View style={[styles.pin, { backgroundColor: q.status === 'completed' ? colors.textMuted : getSizeColor(q.size, colors.danger), borderColor: colors.bgCard }]}>
                 {q.status === 'completed' ? <CheckCircle color="#FFF" size={16} /> : <MapPin color="#FFF" size={16} />}
              </View>
           </Marker>
@@ -104,8 +114,11 @@ function QuestsScreen({ navigation }) {
                <View style={[styles.tag, { backgroundColor: colors.primaryLight }]}><Text style={[styles.tagText, { color: colors.primary }]}>${q.reward}</Text></View>
             </View>
             <View style={{flexDirection: 'row', alignItems: 'center', marginBottom: 16}}>
+               <View style={[styles.tag, { backgroundColor: getSizeColor(q.size, colors.primary) + '20', marginRight: 12 }]}>
+                 <Text style={[styles.tagText, { color: getSizeColor(q.size, colors.primary) }]}>{q.size}</Text>
+               </View>
                <MapPin size={14} color={colors.textMuted} style={{marginRight: 4}}/>
-               <Text style={[styles.p, { color: colors.textMuted }]}>{q.size} Area • +{q.pts} pts</Text>
+               <Text style={[styles.p, { color: colors.textMuted }]}>+{q.pts} pts</Text>
             </View>
             <TouchableOpacity style={[styles.btn, { backgroundColor: colors.success }]} onPress={() => navigation.navigate('QuestDetails', { bounty: q })}>
                <CheckCircle color="#FFF" size={18} />
@@ -156,6 +169,11 @@ function QuestDetailsScreen({ navigation, route }) {
       )}
 
       <View style={{ padding: 24 }}>
+        <View style={{flexDirection: 'row', alignItems: 'center', marginBottom: 12}}>
+          <View style={[styles.tag, { backgroundColor: getSizeColor(bounty.size, colors.primary) + '20' }]}>
+             <Text style={[styles.tagText, { color: getSizeColor(bounty.size, colors.primary) }]}>{bounty.size} Hazard Level</Text>
+          </View>
+        </View>
         <Text style={[styles.h1, { color: colors.textMain, marginBottom: 16 }]}>{bounty.title}</Text>
         
         <View style={[{ flexDirection: 'row', alignItems: 'center', padding: 16, borderRadius: 16, backgroundColor: colors.primaryLight, marginBottom: 16 }]}>
