@@ -17,13 +17,18 @@ const { width, height } = Dimensions.get('window');
 const lightColors = {
   bgBase: '#F8FAFC', bgCard: '#FFFFFF', textMain: '#1E293B', textMuted: '#64748B',
   primary: '#2563EB', primaryLight: '#DBEAFE', success: '#22C55E', warning: '#F59E0B', danger: '#EF4444', border: '#E2E8F0',
-  mapStyle: []
+  mapStyle: [
+    { featureType: "poi", stylers: [{ visibility: "off" }] },
+    { featureType: "transit", stylers: [{ visibility: "off" }] }
+  ]
 };
 
 const darkColors = {
   bgBase: '#0F172A', bgCard: '#1E293B', textMain: '#F8FAFC', textMuted: '#94A3B8',
   primary: '#3B82F6', primaryLight: '#1E3A8A', success: '#22C55E', warning: '#F59E0B', danger: '#EF4444', border: '#334155',
   mapStyle: [
+    { featureType: "poi", stylers: [{ visibility: "off" }] },
+    { featureType: "transit", stylers: [{ visibility: "off" }] },
     { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
     { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
     { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
@@ -45,11 +50,13 @@ const getSizeColor = (size, fallback) => {
 
 // --- MOCK DATA (Naga City, PH) ---
 const INITIAL_QUESTS = [
+  { id: 1, lat: 13.6245, lon: 123.1850, title: 'Plaza Quince Martires Litter', size: 'Large', pts: 350, reward: 20, status: 'active', photoUri: 'https://images.unsplash.com/photo-1611284446314-60a58ac0deb9?q=80&w=400&auto=format&fit=crop' },
   { id: 2, lat: 13.6220, lon: 123.1830, title: 'Naga Public Market Cleanup', size: 'Hazardous', pts: 480, reward: 10, status: 'active', photoUri: 'https://images.unsplash.com/photo-1518005020951-eccb494ad742?q=80&w=400&auto=format&fit=crop' },
+  { id: 3, lat: 13.6260, lon: 123.1880, title: 'Bicol River Bank Plastics', size: 'Small', pts: 80, reward: 5, status: 'active', photoUri: null },
 ];
 
 const PARTNER_STORES = [
-  { id: 101, lat: 13.6245, lon: 123.1850, title: 'Eco Café Naga', desc: 'Partner Store! Exchange your Eco-Points for delicious coffee, pasties, and sustainable goods right here in the city.', offers: ['500 pts = Free Iced Coffee', '800 pts = Bamboo Straw Set', '1500 pts = Reusable Tote Bag'] }
+  { id: 101, lat: 13.6250, lon: 123.1870, title: 'Eco Café Naga', desc: 'Partner Store! Exchange your Eco-Points for delicious coffee, pasties, and sustainable goods right here in the city.', offers: ['500 pts = Free Iced Coffee', '800 pts = Bamboo Straw Set', '1500 pts = Reusable Tote Bag'] }
 ];
 
 const LEADERBOARD = [
@@ -76,6 +83,7 @@ function MapScreen({ navigation, route }) {
       <MapView 
         style={styles.map} 
         customMapStyle={colors.mapStyle}
+        showsPointsOfInterest={false}
         // Center on Naga City, PH
         initialRegion={{ latitude: 13.621775, longitude: 123.185495, latitudeDelta: 0.015, longitudeDelta: 0.015 }}
       >
