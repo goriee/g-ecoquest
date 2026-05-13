@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, createContext, useContext } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, Dimensions, ScrollView, Image, ActivityIndicator, Alert, Switch, TextInput } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Dimensions, ScrollView, Image, ActivityIndicator, Alert, Switch, TextInput, Modal } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { CameraView, useCameraPermissions } from 'expo-camera';
@@ -7,7 +7,7 @@ import { useFonts, Inter_400Regular, Inter_700Bold, Inter_900Black } from '@expo
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { MapPin, List, Plus, Trophy, User, Bell, Navigation, CheckCircle, Camera, Award, Shield, Settings, Moon, Sun, Heart, DollarSign, Store } from 'lucide-react-native';
+import { MapPin, List, Plus, Trophy, User, Bell, Navigation, CheckCircle, Camera, Award, Shield, Settings, Moon, Sun, Heart, DollarSign, Store, Users } from 'lucide-react-native';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -124,41 +124,79 @@ function MapScreen({ navigation, route }) {
 function QuestsScreen({ navigation }) {
   const { colors } = useContext(ThemeContext);
   const [filter, setFilter] = useState('All');
+  const [tab, setTab] = useState('Quests');
   
   const filteredQuests = filter === 'All' ? INITIAL_QUESTS : INITIAL_QUESTS.filter(q => q.size === filter);
   
   return (
     <View style={[styles.container, { backgroundColor: colors.bgBase }]}>
       <View style={[styles.appHeader, { backgroundColor: colors.bgCard, borderBottomColor: colors.border }]}>
-        <Text style={[styles.h1, { color: colors.textMain }]}>Active Quests</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 12 }}>
-          {['All', 'Small', 'Medium', 'Large', 'Hazardous'].map(f => (
-            <TouchableOpacity key={f} onPress={() => setFilter(f)} style={{ paddingHorizontal: 16, paddingVertical: 6, borderRadius: 16, backgroundColor: filter === f ? colors.primary : colors.primaryLight, marginRight: 8 }}>
-              <Text style={{ fontFamily: 'Inter_700Bold', color: filter === f ? '#FFF' : colors.primary }}>{f}</Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Text style={[styles.h1, { color: colors.textMain }]}>Activity</Text>
+        </View>
+        <View style={{ flexDirection: 'row', marginTop: 12, backgroundColor: colors.bgBase, borderRadius: 8, padding: 4 }}>
+           <TouchableOpacity style={{ flex: 1, paddingVertical: 8, alignItems: 'center', backgroundColor: tab === 'Quests' ? colors.primary : 'transparent', borderRadius: 6 }} onPress={() => setTab('Quests')}>
+             <Text style={{ fontFamily: 'Inter_700Bold', color: tab === 'Quests' ? '#FFF' : colors.textMuted }}>Quests</Text>
+           </TouchableOpacity>
+           <TouchableOpacity style={{ flex: 1, paddingVertical: 8, alignItems: 'center', backgroundColor: tab === 'Verifications' ? colors.primary : 'transparent', borderRadius: 6 }} onPress={() => setTab('Verifications')}>
+             <Text style={{ fontFamily: 'Inter_700Bold', color: tab === 'Verifications' ? '#FFF' : colors.textMuted }}>Verifications</Text>
+           </TouchableOpacity>
+        </View>
+        
+        {tab === 'Quests' && (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 12 }}>
+            {['All', 'Small', 'Medium', 'Large', 'Hazardous'].map(f => (
+              <TouchableOpacity key={f} onPress={() => setFilter(f)} style={{ paddingHorizontal: 16, paddingVertical: 6, borderRadius: 16, backgroundColor: filter === f ? colors.primary : colors.primaryLight, marginRight: 8 }}>
+                <Text style={{ fontFamily: 'Inter_700Bold', color: filter === f ? '#FFF' : colors.primary }}>{f}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        )}
       </View>
       <ScrollView contentContainerStyle={{ padding: 20 }}>
-        {filteredQuests.map(q => (
-          <View key={q.id} style={[styles.card, { backgroundColor: colors.bgCard, borderColor: colors.border }]}>
-            <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12}}>
-               <Text style={[styles.h2, { color: colors.textMain, flex: 1 }]}>{q.title}</Text>
-               <View style={[styles.tag, { backgroundColor: colors.primaryLight }]}><Text style={[styles.tagText, { color: colors.primary }]}>₱{q.reward}</Text></View>
+        {tab === 'Quests' ? (
+          filteredQuests.map(q => (
+            <View key={q.id} style={[styles.card, { backgroundColor: colors.bgCard, borderColor: colors.border }]}>
+              <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12}}>
+                 <Text style={[styles.h2, { color: colors.textMain, flex: 1 }]}>{q.title}</Text>
+                 <View style={[styles.tag, { backgroundColor: colors.primaryLight }]}><Text style={[styles.tagText, { color: colors.primary }]}>₱{q.reward}</Text></View>
+              </View>
+              <View style={{flexDirection: 'row', alignItems: 'center', marginBottom: 16}}>
+                 <View style={[styles.tag, { backgroundColor: getSizeColor(q.size, colors.primary) + '20', marginRight: 12 }]}>
+                   <Text style={[styles.tagText, { color: getSizeColor(q.size, colors.primary) }]}>{q.size}</Text>
+                 </View>
+                 <MapPin size={14} color={colors.textMuted} style={{marginRight: 4}}/>
+                 <Text style={[styles.p, { color: colors.textMuted }]}>+{q.pts} pts</Text>
+              </View>
+              <TouchableOpacity style={[styles.btn, { backgroundColor: colors.success }]} onPress={() => navigation.navigate('QuestDetails', { bounty: q })}>
+                 <CheckCircle color="#FFF" size={18} />
+                 <Text style={styles.btnText}>View Quest</Text>
+              </TouchableOpacity>
             </View>
-            <View style={{flexDirection: 'row', alignItems: 'center', marginBottom: 16}}>
-               <View style={[styles.tag, { backgroundColor: getSizeColor(q.size, colors.primary) + '20', marginRight: 12 }]}>
-                 <Text style={[styles.tagText, { color: getSizeColor(q.size, colors.primary) }]}>{q.size}</Text>
-               </View>
-               <MapPin size={14} color={colors.textMuted} style={{marginRight: 4}}/>
-               <Text style={[styles.p, { color: colors.textMuted }]}>+{q.pts} pts</Text>
-            </View>
-            <TouchableOpacity style={[styles.btn, { backgroundColor: colors.success }]} onPress={() => navigation.navigate('QuestDetails', { bounty: q })}>
-               <CheckCircle color="#FFF" size={18} />
-               <Text style={styles.btnText}>View Quest</Text>
-            </TouchableOpacity>
+          ))
+        ) : (
+          <View style={[styles.card, { backgroundColor: colors.bgCard, borderColor: colors.border }]}>
+             <Text style={[styles.h2, { color: colors.textMain, marginBottom: 8 }]}>Plaza Stage Cleanup Verification</Text>
+             <Text style={[styles.p, { color: colors.textMuted, marginBottom: 12 }]}>Submitted by @EcoWarrior23. Needs 3 votes.</Text>
+             <View style={{flexDirection: 'row', gap: 8, marginBottom: 16}}>
+                <View style={{flex: 1, height: 120, backgroundColor: colors.border, borderRadius: 8, justifyContent: 'center', alignItems: 'center'}}>
+                   <Text style={{color: colors.textMuted, fontFamily: 'Inter_700Bold'}}>Before</Text>
+                </View>
+                <View style={{flex: 1, height: 120, backgroundColor: colors.border, borderRadius: 8, justifyContent: 'center', alignItems: 'center'}}>
+                   <Text style={{color: colors.textMuted, fontFamily: 'Inter_700Bold'}}>After</Text>
+                </View>
+             </View>
+             <View style={{flexDirection: 'row', gap: 12}}>
+               <TouchableOpacity style={[styles.btn, { backgroundColor: colors.danger, flex: 1 }]} onPress={() => Alert.alert('Voted', 'You voted UR cooked!')}>
+                 <Text style={styles.btnText}>UR cooked</Text>
+               </TouchableOpacity>
+               <TouchableOpacity style={[styles.btn, { backgroundColor: colors.success, flex: 1 }]} onPress={() => Alert.alert('Voted', 'You voted U cooked!')}>
+                 <Text style={styles.btnText}>U cooked</Text>
+               </TouchableOpacity>
+             </View>
+             <Text style={[styles.p, { color: colors.textMuted, textAlign: 'center', marginTop: 12, fontSize: 12 }]}>1 / 3 Votes Cast</Text>
           </View>
-        ))}
+        )}
       </ScrollView>
     </View>
   );
@@ -170,6 +208,8 @@ function QuestsScreen({ navigation }) {
 function QuestDetailsScreen({ navigation, route }) {
   const { colors, isDark } = useContext(ThemeContext);
   const [bounty, setBounty] = useState(route.params.bounty);
+  const [showGroupModal, setShowGroupModal] = useState(false);
+  const [otherUserId, setOtherUserId] = useState('');
 
   const handleTip = () => {
     Alert.alert(
@@ -232,14 +272,65 @@ function QuestDetailsScreen({ navigation, route }) {
            <Text style={[styles.locationText, { color: colors.textMain, flex: 1 }]} numberOfLines={2}>{bounty.address || `${bounty.lat.toFixed(5)}, ${bounty.lon.toFixed(5)}`}</Text>
         </View>
 
-        <TouchableOpacity 
-          style={[styles.btn, { backgroundColor: colors.success, marginTop: 16 }]}
-          onPress={() => navigation.navigate('CompleteQuest', { bounty })}
-        >
-          <CheckCircle color="#FFF" size={24} />
-          <Text style={styles.btnText}>Accept & Clean Up</Text>
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', gap: 12, marginTop: 16 }}>
+          <TouchableOpacity 
+            style={[styles.btn, { backgroundColor: colors.success, flex: 1 }]}
+            onPress={() => navigation.navigate('CompleteQuest', { bounty })}
+          >
+            <User color="#FFF" size={20} />
+            <Text style={styles.btnText}> Solo Quest</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.btn, { backgroundColor: colors.primary, flex: 1 }]}
+            onPress={() => setShowGroupModal(true)}
+          >
+            <Users color="#FFF" size={20} />
+            <Text style={styles.btnText}> Group Quest</Text>
+          </TouchableOpacity>
+        </View>
       </View>
+
+      <Modal visible={showGroupModal} transparent animationType="slide">
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}>
+          <View style={{ backgroundColor: colors.bgBase, padding: 24, borderTopLeftRadius: 24, borderTopRightRadius: 24 }}>
+            <Text style={[styles.h1, { color: colors.textMain, marginBottom: 16 }]}>Group Quest Setup</Text>
+            <Text style={[styles.p, { color: colors.textMuted, marginBottom: 12 }]}>Friends:</Text>
+            {['@JuanDelaCruz', '@MariaClara'].map(friend => (
+              <View key={friend} style={{ padding: 12, backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.border, borderRadius: 8, marginBottom: 8 }}>
+                <Text style={[styles.p, { color: colors.textMain }]}>{friend}</Text>
+              </View>
+            ))}
+            <Text style={[styles.p, { color: colors.textMuted, marginTop: 16, marginBottom: 8 }]}>Invite by User ID:</Text>
+            <TextInput
+              placeholder="e.g. @EcoWarrior23"
+              placeholderTextColor={colors.textMuted}
+              value={otherUserId}
+              onChangeText={setOtherUserId}
+              style={{
+                backgroundColor: colors.bgCard,
+                borderColor: colors.border,
+                borderWidth: 1,
+                borderRadius: 12,
+                padding: 16,
+                color: colors.textMain,
+                fontFamily: 'Inter_400Regular',
+                marginBottom: 24
+              }}
+            />
+            <View style={{ flexDirection: 'row', gap: 12 }}>
+              <TouchableOpacity style={[styles.btn, { flex: 1, backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.border }]} onPress={() => setShowGroupModal(false)}>
+                <Text style={[styles.btnText, { color: colors.textMain }]}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.btn, { flex: 1, backgroundColor: colors.primary }]} onPress={() => {
+                setShowGroupModal(false);
+                navigation.navigate('CompleteQuest', { bounty });
+              }}>
+                <Text style={styles.btnText}>Start Group Quest</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
@@ -345,6 +436,7 @@ function ReportScreen({ navigation }) {
   const [photo, setPhoto] = useState(null);
   const [size, setSize] = useState('Medium');
   const [reward, setReward] = useState('');
+  const [desc, setDesc] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const cameraRef = useRef(null);
 
@@ -365,6 +457,7 @@ function ReportScreen({ navigation }) {
         { text: 'Sweet!', onPress: () => {
             setPhoto(null);
             setReward('');
+            setDesc('');
             navigation.navigate('MainTabs', { screen: 'Map' });
         } }
       ]);
@@ -417,7 +510,28 @@ function ReportScreen({ navigation }) {
           ))}
         </View>
 
-        <Text style={[styles.h2, { color: colors.textMain, marginBottom: 12 }]}>Optional Reward</Text>
+        <Text style={[styles.h2, { color: colors.textMain, marginBottom: 12 }]}>Description</Text>
+        <TextInput
+          placeholder="Describe the mess..."
+          placeholderTextColor={colors.textMuted}
+          multiline
+          numberOfLines={3}
+          value={desc}
+          onChangeText={setDesc}
+          style={{
+            backgroundColor: colors.bgCard,
+            borderColor: colors.border,
+            borderWidth: 1,
+            borderRadius: 12,
+            padding: 16,
+            color: colors.textMain,
+            fontFamily: 'Inter_400Regular',
+            marginBottom: 20,
+            textAlignVertical: 'top'
+          }}
+        />
+
+        <Text style={[styles.h2, { color: colors.textMain, marginBottom: 12 }]}>Optional Reward (₱)</Text>
         <TextInput
           placeholder="e.g. 100"
           placeholderTextColor={colors.textMuted}
@@ -506,6 +620,7 @@ function ProfileScreen() {
         <View style={styles.center}>
            <Image source={{ uri: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=200' }} style={[styles.profileAvar, { borderColor: colors.primary }]} />
            <Text style={[styles.h1, { color: colors.textMain, marginBottom: 4 }]}>JD EarthSaver</Text>
+           <Text style={[styles.p, { color: colors.primary, fontFamily: 'Inter_700Bold', marginBottom: 4 }]}>@JDEarth26</Text>
            <Text style={[styles.p, { color: colors.textMuted }]}>Joined May 2026</Text>
         </View>
         <View style={{flexDirection: 'row', justifyContent: 'space-between', marginTop: 32}}>
