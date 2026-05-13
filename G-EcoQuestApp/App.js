@@ -7,7 +7,7 @@ import { useFonts, Inter_400Regular, Inter_700Bold, Inter_900Black } from '@expo
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { MapPin, List, Plus, Trophy, User, Bell, Navigation, CheckCircle, Camera, Award, Shield, Settings, Moon, Sun, Heart, DollarSign } from 'lucide-react-native';
+import { MapPin, List, Plus, Trophy, User, Bell, Navigation, CheckCircle, Camera, Award, Shield, Settings, Moon, Sun, Heart, DollarSign, Store } from 'lucide-react-native';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -45,9 +45,11 @@ const getSizeColor = (size, fallback) => {
 
 // --- MOCK DATA (Naga City, PH) ---
 const INITIAL_QUESTS = [
-  { id: 1, lat: 13.6245, lon: 123.1850, title: 'Plaza Quince Martires Litter', size: 'Large', pts: 350, reward: 20, status: 'active', photoUri: 'https://images.unsplash.com/photo-1611284446314-60a58ac0deb9?q=80&w=400&auto=format&fit=crop' },
   { id: 2, lat: 13.6220, lon: 123.1830, title: 'Naga Public Market Cleanup', size: 'Hazardous', pts: 480, reward: 10, status: 'active', photoUri: 'https://images.unsplash.com/photo-1518005020951-eccb494ad742?q=80&w=400&auto=format&fit=crop' },
-  { id: 3, lat: 13.6260, lon: 123.1880, title: 'Bicol River Bank Plastics', size: 'Small', pts: 80, reward: 5, status: 'active', photoUri: null },
+];
+
+const PARTNER_STORES = [
+  { id: 101, lat: 13.6245, lon: 123.1850, title: 'Eco Café Naga', desc: 'Partner Store! Exchange your Eco-Points for delicious coffee, pasties, and sustainable goods right here in the city.', offers: ['500 pts = Free Iced Coffee', '800 pts = Bamboo Straw Set', '1500 pts = Reusable Tote Bag'] }
 ];
 
 const LEADERBOARD = [
@@ -81,6 +83,13 @@ function MapScreen({ navigation, route }) {
           <Marker key={q.id} coordinate={{ latitude: q.lat, longitude: q.lon }} onPress={() => navigation.navigate('QuestDetails', { bounty: q })}>
              <View style={[styles.pin, { backgroundColor: q.status === 'completed' ? colors.textMuted : getSizeColor(q.size, colors.danger), borderColor: colors.bgCard }]}>
                 {q.status === 'completed' ? <CheckCircle color="#FFF" size={16} /> : <MapPin color="#FFF" size={16} />}
+             </View>
+          </Marker>
+        ))}
+        {PARTNER_STORES.map(store => (
+          <Marker key={store.id} coordinate={{ latitude: store.lat, longitude: store.lon }} onPress={() => navigation.navigate('StoreDetails', { store })}>
+             <View style={[styles.pin, { backgroundColor: colors.success, borderColor: colors.bgCard, width: 36, height: 36, borderRadius: 18 }]}>
+                <Store color="#FFF" size={18} />
              </View>
           </Marker>
         ))}
@@ -275,6 +284,34 @@ function CompleteQuestScreen({ navigation, route }) {
 }
 
 // -------------------------------------------------------------
+// PARTNER STORE SCREEN
+// -------------------------------------------------------------
+function StoreDetailsScreen({ route }) {
+  const { colors } = useContext(ThemeContext);
+  const { store } = route.params;
+
+  return (
+    <ScrollView style={[styles.container, { backgroundColor: colors.bgBase }]} contentContainerStyle={{ padding: 24 }}>
+      <View style={[styles.card, { backgroundColor: colors.bgCard, borderColor: colors.border, alignItems: 'center' }]}>
+        <View style={{ width: 80, height: 80, borderRadius: 40, backgroundColor: colors.success + '20', justifyContent: 'center', alignItems: 'center', marginBottom: 16 }}>
+           <Store color={colors.success} size={40} />
+        </View>
+        <Text style={[styles.h1, { color: colors.textMain, textAlign: 'center' }]}>{store.title}</Text>
+        <Text style={[styles.p, { color: colors.textMuted, textAlign: 'center', marginTop: 8 }]}>{store.desc}</Text>
+      </View>
+      
+      <Text style={[styles.h2, { color: colors.textMain, marginTop: 24, marginBottom: 16 }]}>Redeemable Rewards</Text>
+      {store.offers.map((offer, i) => (
+         <View key={i} style={[styles.settingRow, { backgroundColor: colors.bgCard, borderBottomColor: colors.border, borderRadius: 12, marginBottom: 8, paddingHorizontal: 16 }]}>
+            <Text style={[styles.p, { color: colors.textMain, flex: 1, fontFamily: 'Inter_700Bold' }]}>{offer}</Text>
+            <Award color={colors.primary} size={24} />
+         </View>
+      ))}
+    </ScrollView>
+  );
+}
+
+// -------------------------------------------------------------
 // EXISTING TABS
 // -------------------------------------------------------------
 function ReportScreen({ navigation }) {
@@ -454,8 +491,9 @@ export default function App() {
       <NavigationContainer>
         <Stack.Navigator screenOptions={{ headerShown: false }}>
           <Stack.Screen name="MainTabs" component={TabNavigator} />
-          <Stack.Screen name="QuestDetails" component={QuestDetailsScreen} options={({ route }) => ({ headerShown: true, title: 'Quest Details', headerBackTitle: 'Map' })} />
+          <Stack.Screen name="QuestDetails" component={QuestDetailsScreen} options={{ headerShown: true, title: 'Quest Details', headerBackTitle: 'Map' }} />
           <Stack.Screen name="CompleteQuest" component={CompleteQuestScreen} options={{ headerShown: true, title: 'Verify' }} />
+          <Stack.Screen name="StoreDetails" component={StoreDetailsScreen} options={{ headerShown: true, title: 'Partner Store', headerBackTitle: 'Map' }} />
         </Stack.Navigator>
       </NavigationContainer>
     </ThemeContext.Provider>
