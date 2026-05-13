@@ -7,7 +7,7 @@ import { useFonts, Inter_400Regular, Inter_700Bold, Inter_900Black } from '@expo
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { MapPin, List, Plus, Trophy, User, Bell, Navigation, CheckCircle, Camera, Award, Shield, Settings, Moon, Sun, Heart, DollarSign, Store, Users } from 'lucide-react-native';
+import { MapPin, List, Plus, Trophy, User, Bell, Navigation, CheckCircle, Camera, Award, Shield, Settings, Moon, Sun, Heart, DollarSign, Store, Users, AlertTriangle, Flame, ShoppingBag, Droplet, Leaf, Flag, Target } from 'lucide-react-native';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -134,7 +134,17 @@ function QuestsScreen({ navigation }) {
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <Text style={[styles.h1, { color: colors.textMain }]}>Activity</Text>
         </View>
-        <View style={{ flexDirection: 'row', marginTop: 12, backgroundColor: colors.bgBase, borderRadius: 8, padding: 4 }}>
+
+        {/* --- DAILY CHALLENGE BANNER --- */}
+        <View style={{ backgroundColor: colors.warning + '20', borderRadius: 12, padding: 16, marginTop: 16, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: colors.warning }}>
+          <Flame color={colors.warning} size={32} style={{ marginRight: 12 }} />
+          <View style={{ flex: 1 }}>
+             <Text style={[styles.h2, { color: colors.warning, fontSize: 16 }]}>Daily Challenge: Streak Time!</Text>
+             <Text style={[styles.p, { color: colors.textMain, fontSize: 12, marginTop: 4 }]}>Verify 2 cleanups today for a 2x point multiplier! (0/2)</Text>
+          </View>
+        </View>
+
+        <View style={{ flexDirection: 'row', marginTop: 16, backgroundColor: colors.bgBase, borderRadius: 8, padding: 4 }}>
            <TouchableOpacity style={{ flex: 1, paddingVertical: 8, alignItems: 'center', backgroundColor: tab === 'Quests' ? colors.primary : 'transparent', borderRadius: 6 }} onPress={() => setTab('Quests')}>
              <Text style={{ fontFamily: 'Inter_700Bold', color: tab === 'Quests' ? '#FFF' : colors.textMuted }}>Quests</Text>
            </TouchableOpacity>
@@ -242,10 +252,17 @@ function QuestDetailsScreen({ navigation, route }) {
       )}
 
       <View style={{ padding: 24 }}>
-        <View style={{flexDirection: 'row', alignItems: 'center', marginBottom: 12}}>
+        <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12}}>
           <View style={[styles.tag, { backgroundColor: getSizeColor(bounty.size, colors.primary) + '20' }]}>
              <Text style={[styles.tagText, { color: getSizeColor(bounty.size, colors.primary) }]}>{bounty.size} Hazard Level</Text>
           </View>
+          <TouchableOpacity 
+            style={{flexDirection: 'row', alignItems: 'center', padding: 8}}
+            onPress={() => Alert.alert("Report Fake", "Flag this pin as fake or inappropriate?", [{text: "Cancel"}, {text: "Report", style: "destructive", onPress: () => Alert.alert("Reported", "Trust and Safety team notified. Trust score affected if verified false.")}])}
+          >
+             <AlertTriangle color={colors.danger} size={16} />
+             <Text style={{color: colors.danger, fontFamily: 'Inter_700Bold', fontSize: 12, marginLeft: 4}}>Flag as Fake</Text>
+          </TouchableOpacity>
         </View>
         <Text style={[styles.h1, { color: colors.textMain, marginBottom: 8 }]}>{bounty.title}</Text>
         <Text style={[styles.p, { color: colors.textMuted, marginBottom: 16 }]}>{bounty.desc || "No description provided."}</Text>
@@ -605,7 +622,7 @@ function RanksScreen() {
   );
 }
 
-function ProfileScreen() {
+function ProfileScreen({ navigation }) {
   const { colors, isDark, toggleTheme } = useContext(ThemeContext);
   return (
     <View style={[styles.container, { backgroundColor: colors.bgBase }]}>
@@ -623,7 +640,42 @@ function ProfileScreen() {
            <Text style={[styles.p, { color: colors.primary, fontFamily: 'Inter_700Bold', marginBottom: 4 }]}>@JDEarth26</Text>
            <Text style={[styles.p, { color: colors.textMuted }]}>Joined May 2026</Text>
         </View>
-        <View style={{flexDirection: 'row', justifyContent: 'space-between', marginTop: 32}}>
+
+        {/* --- ACHIEVEMENTS & BADGES --- */}
+        <Text style={[styles.h2, { color: colors.textMain, marginTop: 32, marginBottom: 12 }]}>Achievements</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 8 }}>
+          {[
+            { name: 'First Blood', icon: <Target color="#FFF" size={24}/>, bg: colors.danger },
+            { name: 'River Guardian', icon: <Droplet color="#FFF" size={24}/>, bg: '#0EA5E9' },
+            { name: 'Streak 🔥', icon: <Flame color="#FFF" size={24}/>, bg: colors.warning },
+            { name: 'Whale', icon: <Award color="#FFF" size={24}/>, bg: colors.success },
+            { name: 'Eagle Eye', icon: <CheckCircle color="#FFF" size={24}/>, bg: '#8B5CF6' },
+          ].map((badge, i) => (
+             <View key={i} style={{ alignItems: 'center', marginRight: 16 }}>
+               <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: badge.bg, justifyContent: 'center', alignItems: 'center', marginBottom: 8 }}>
+                 {badge.icon}
+               </View>
+               <Text style={[styles.p, { color: colors.textMain, fontSize: 12, fontFamily: 'Inter_700Bold' }]}>{badge.name}</Text>
+             </View>
+          ))}
+        </ScrollView>
+
+        {/* --- IMPACT DASHBOARD --- */}
+        <Text style={[styles.h2, { color: colors.textMain, marginTop: 32, marginBottom: 16 }]}>My Real-World Impact</Text>
+        <View style={{ flexDirection: 'row', gap: 12, marginBottom: 16 }}>
+          <View style={[styles.statBox, { backgroundColor: colors.bgCard, borderColor: colors.border, flex: 1 }]}>
+            <ShoppingBag color={colors.primary} size={28}/>
+            <Text style={[styles.h1, { color: colors.textMain, marginTop: 12 }]}>~25 kg</Text>
+            <Text style={[styles.p, { color: colors.textMuted, fontSize: 12 }]}>Waste Cleaned</Text>
+          </View>
+          <View style={[styles.statBox, { backgroundColor: colors.bgCard, borderColor: colors.border, flex: 1 }]}>
+            <Leaf color={colors.success} size={28}/>
+            <Text style={[styles.h1, { color: colors.textMain, marginTop: 12 }]}>5</Text>
+            <Text style={[styles.p, { color: colors.textMuted, fontSize: 12 }]}>Habitats Saved</Text>
+          </View>
+        </View>
+
+        <View style={{flexDirection: 'row', justifyContent: 'space-between', marginTop: 16}}>
            {[{ label: 'Eco-Points', val: '1,240', icon: <Award color={colors.success} size={24}/> }, { label: 'Cleanups', val: '14', icon: <Camera color={colors.primary} size={24}/> }, { label: 'Trust Score', val: '98%', icon: <Shield color={colors.warning} size={24}/> }].map((stat, i) => (
              <View key={i} style={[styles.statBox, { backgroundColor: colors.bgCard, borderColor: colors.border }]}>
                 {stat.icon}<Text style={[styles.h2, { color: colors.textMain, marginTop: 8 }]}>{stat.val}</Text><Text style={[styles.p, { color: colors.textMuted, fontSize: 12 }]}>{stat.label}</Text>
@@ -631,7 +683,10 @@ function ProfileScreen() {
            ))}
         </View>
 
-        <TouchableOpacity style={[styles.btn, { backgroundColor: colors.success, marginTop: 24 }]}>
+        <TouchableOpacity 
+          style={[styles.btn, { backgroundColor: colors.success, marginTop: 24 }]}
+          onPress={() => navigation.navigate('Marketplace')}
+        >
            <Store color="#FFF" size={20} />
            <Text style={styles.btnText}> Exchange Points</Text>
         </TouchableOpacity>
@@ -642,6 +697,51 @@ function ProfileScreen() {
              <Text style={[styles.p, { color: colors.textMain }]}>{item}</Text><Settings color={colors.textMuted} size={16} />
           </TouchableOpacity>
         ))}
+      </ScrollView>
+    </View>
+  );
+}
+
+// -------------------------------------------------------------
+// MARKETPLACE SCREEN (EXCHANGE POINTS)
+// -------------------------------------------------------------
+function MarketplaceScreen({ navigation }) {
+  const { colors } = useContext(ThemeContext);
+  
+  const offers = [
+    { title: '₱50 GCash Voucher', pts: 1000, icon: <DollarSign color="#10B981" size={32} /> },
+    { title: 'Free Coffee @ Partner Cafe', pts: 500, icon: <Store color="#F59E0B" size={32} /> },
+    { title: 'Eco-Tote Bag', pts: 1200, icon: <ShoppingBag color="#3B82F6" size={32} /> },
+    { title: 'Metal Straw Set', pts: 800, icon: <Droplet color="#8B5CF6" size={32} /> },
+  ];
+
+  return (
+    <View style={[styles.container, { backgroundColor: colors.bgBase }]}>
+      <View style={[styles.appHeader, { backgroundColor: colors.bgCard, borderBottomColor: colors.border }]}>
+        <Text style={[styles.h1, { color: colors.textMain }]}>Points Exchange</Text>
+        <Text style={[styles.p, { color: colors.success, fontFamily: 'Inter_700Bold', marginTop: 4 }]}>Your Balance: 1,240 pts</Text>
+      </View>
+      <ScrollView contentContainerStyle={{ padding: 20 }}>
+        {offers.map((o, i) => (
+          <View key={i} style={[styles.card, { backgroundColor: colors.bgCard, borderColor: colors.border, flexDirection: 'row', alignItems: 'center' }]}>
+            <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: colors.primaryLight, justifyContent: 'center', alignItems: 'center', marginRight: 16 }}>
+              {o.icon}
+            </View>
+            <View style={{ flex: 1 }}>
+               <Text style={[styles.h2, { color: colors.textMain, marginBottom: 4 }]}>{o.title}</Text>
+               <Text style={[styles.p, { color: colors.primary, fontFamily: 'Inter_700Bold' }]}>{o.pts} pts</Text>
+            </View>
+            <TouchableOpacity 
+              style={{ backgroundColor: colors.success, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 16 }}
+              onPress={() => Alert.alert('Redeem', `Buy ${o.title} for ${o.pts} points?`, [{text: 'Cancel'}, {text: 'Yes!'}])}
+            >
+              <Text style={{ fontFamily: 'Inter_700Bold', color: '#FFF' }}>Redeem</Text>
+            </TouchableOpacity>
+          </View>
+        ))}
+        <TouchableOpacity style={[styles.btn, { backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.border, marginTop: 24 }]} onPress={() => navigation.goBack()}>
+          <Text style={[styles.btnText, { color: colors.textMain }]}>Go Back</Text>
+        </TouchableOpacity>
       </ScrollView>
     </View>
   );
@@ -678,6 +778,7 @@ export default function App() {
       <NavigationContainer>
         <Stack.Navigator screenOptions={{ headerShown: false }}>
           <Stack.Screen name="MainTabs" component={TabNavigator} />
+          <Stack.Screen name="Marketplace" component={MarketplaceScreen} options={{ presentation: 'modal' }} />
           <Stack.Screen name="QuestDetails" component={QuestDetailsScreen} options={{ headerShown: true, title: 'Quest Details', headerBackTitle: 'Map' }} />
           <Stack.Screen name="CompleteQuest" component={CompleteQuestScreen} options={{ headerShown: true, title: 'Verify' }} />
           <Stack.Screen name="StoreDetails" component={StoreDetailsScreen} options={{ headerShown: true, title: 'Partner Store', headerBackTitle: 'Map' }} />
