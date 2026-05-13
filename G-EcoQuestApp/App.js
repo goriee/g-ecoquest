@@ -259,9 +259,13 @@ function CompleteQuestScreen({ navigation, route }) {
 // -------------------------------------------------------------
 // EXISTING TABS
 // -------------------------------------------------------------
-function ReportScreen() {
+function ReportScreen({ navigation }) {
   const { colors } = useContext(ThemeContext);
   const [permission, requestPermission] = useCameraPermissions();
+  const [photo, setPhoto] = useState(null);
+  const [size, setSize] = useState('Medium');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const cameraRef = useRef(null);
 
   if (!permission?.granted) {
     return (
@@ -272,23 +276,74 @@ function ReportScreen() {
     );
   }
 
+  const submitReport = () => {
+    setIsSubmitting(true);
+    setTimeout(() => {
+      setIsSubmitting(false);
+      Alert.alert('Pin Dropped!', `Your ${size} report has been added to the map.`, [
+        { text: 'Sweet!', onPress: () => {
+            setPhoto(null);
+            navigation.navigate('MainTabs', { screen: 'Map' });
+        } }
+      ]);
+    }, 1500);
+  };
+
+  const SIZES = ['Small', 'Medium', 'Large', 'Hazardous'];
+
   return (
-    <View style={[styles.container, { backgroundColor: colors.bgBase }]}>
+    <ScrollView style={[styles.container, { backgroundColor: colors.bgBase }]}>
       <View style={[styles.appHeader, { backgroundColor: colors.bgCard, borderBottomColor: colors.border }]}>
         <Text style={[styles.h1, { color: colors.textMain }]}>Drop a Pin</Text>
       </View>
-      <View style={{ padding: 20, flex: 1 }}>
+      <View style={{ padding: 20 }}>
         <Text style={[styles.h2, { color: colors.textMain, marginBottom: 8 }]}>Capture the Mess</Text>
         <Text style={[styles.p, { color: colors.textMuted, marginBottom: 20 }]}>Take a clear "Before" photo. GPS coordinates will be attached automatically.</Text>
-        <View style={styles.cameraBox}>
-           <CameraView style={styles.camera} facing="back">
-              <View style={styles.cameraFooter}><TouchableOpacity style={styles.shutterBtn}><View style={styles.shutterIn}/></TouchableOpacity></View>
-           </CameraView>
+        
+        {!photo ? (
+           <View style={styles.cameraBox}>
+             <CameraView style={styles.camera} facing="back" ref={cameraRef}>
+                <View style={styles.cameraFooter}>
+                  <TouchableOpacity style={styles.shutterBtn} onPress={async () => setPhoto((await cameraRef.current.takePictureAsync()).uri)}>
+                    <View style={styles.shutterIn}/>
+                  </TouchableOpacity>
+                </View>
+             </CameraView>
+          </View>
+        ) : (
+           <View style={styles.cameraBox}>
+             <Image source={{ uri: photo }} style={styles.camera} />
+             <TouchableOpacity style={{ position: 'absolute', bottom: 20, alignSelf: 'center', backgroundColor: 'rgba(0,0,0,0.6)', padding: 12, borderRadius: 20 }} onPress={() => setPhoto(null)}>
+               <Text style={{color: '#FFF', fontFamily: 'Inter_700Bold'}}>Retake Photo</Text>
+             </TouchableOpacity>
+           </View>
+        )}
+
+        <Text style={[styles.h2, { color: colors.textMain, marginBottom: 12 }]}>Mess Size</Text>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
+          {SIZES.map(s => (
+            <TouchableOpacity 
+              key={s} 
+              onPress={() => setSize(s)}
+              style={{
+                paddingVertical: 10, paddingHorizontal: 16, borderRadius: 20, borderWidth: 1,
+                backgroundColor: size === s ? colors.primary : colors.bgCard,
+                borderColor: size === s ? colors.primary : colors.border
+              }}>
+              <Text style={{ fontFamily: 'Inter_700Bold', color: size === s ? '#FFF' : colors.textMain }}>{s}</Text>
+            </TouchableOpacity>
+          ))}
         </View>
-        <View style={[styles.locationBanner, { backgroundColor: colors.primaryLight }]}><Navigation color={colors.primary} size={20} /><Text style={[styles.locationText, { color: colors.primary }]}>GPS Locked</Text></View>
-        <TouchableOpacity style={[styles.btn, { backgroundColor: colors.primary }]}><Text style={styles.btnText}>Submit Report</Text></TouchableOpacity>
+
+        <View style={[styles.locationBanner, { backgroundColor: colors.primaryLight }]}><Navigation color={colors.primary} size={20} /><Text style={[styles.locationText, { color: colors.primary }]}>GPS Locked to current location</Text></View>
+        
+        <TouchableOpacity 
+          style={[styles.btn, { backgroundColor: colors.primary }, (!photo || isSubmitting) && { opacity: 0.6 }]} 
+          disabled={!photo || isSubmitting} onPress={submitReport}>
+          {isSubmitting ? <ActivityIndicator color="#FFF" /> : <Text style={styles.btnText}>Submit Report</Text>}
+        </TouchableOpacity>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
