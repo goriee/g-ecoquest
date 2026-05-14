@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, createContext, useContext } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Dimensions, ScrollView, Image, ActivityIndicator, Alert, Switch, TextInput, Modal } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
+import MapView, { Marker, Polyline } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useFonts, Inter_400Regular, Inter_700Bold, Inter_900Black } from '@expo-google-fonts/inter';
@@ -75,6 +75,11 @@ const TOP_SCOUTS = [
 function MapScreen({ navigation, route }) {
   const { colors } = useContext(ThemeContext);
   const [bounties, setBounties] = useState(INITIAL_QUESTS);
+  const [selectedQuest, setSelectedQuest] = useState(null);
+  const [isNavigating, setIsNavigating] = useState(false);
+
+  // Mock current location (Naga City Centro)
+  const currentLocation = { latitude: 13.621775, longitude: 123.185495 };
 
   useEffect(() => {
     if (route.params?.updatedBounty) {
@@ -89,11 +94,24 @@ function MapScreen({ navigation, route }) {
         style={styles.map} 
         customMapStyle={colors.mapStyle}
         showsPointsOfInterest={false}
-        // Center on Naga City, PH
-        initialRegion={{ latitude: 13.621775, longitude: 123.185495, latitudeDelta: 0.015, longitudeDelta: 0.015 }}
+        initialRegion={{ ...currentLocation, latitudeDelta: 0.015, longitudeDelta: 0.015 }}
       >
+        {isNavigating && selectedQuest && (
+          <Polyline 
+            coordinates={[currentLocation, { latitude: selectedQuest.lat, longitude: selectedQuest.lon }]}
+            strokeColor={colors.primary}
+            strokeWidth={4}
+            lineDashPattern={[1]}
+          />
+        )}
+        
+        {/* User Current Location Marker */}
+        <Marker coordinate={currentLocation}>
+          <View style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: colors.primary, borderWidth: 3, borderColor: '#FFF', shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 4, elevation: 5 }} />
+        </Marker>
+
         {bounties.map(q => (
-          <Marker key={q.id} coordinate={{ latitude: q.lat, longitude: q.lon }} onPress={() => navigation.navigate('QuestDetails', { bounty: q })}>
+          <Marker key={q.id} coordinate={{ latitude: q.lat, longitude: q.lon }} onPress={() => { setSelectedQuest(q); setIsNavigating(false); }}>
              <View style={[styles.pin, { backgroundColor: q.status === 'completed' ? colors.textMuted : getSizeColor(q.size, colors.danger), borderColor: colors.bgCard }]}>
                 {q.status === 'completed' ? <CheckCircle color="#FFF" size={16} /> : <MapPin color="#FFF" size={16} />}
              </View>
@@ -117,6 +135,38 @@ function MapScreen({ navigation, route }) {
           <Bell color={colors.primary} size={20} />
         </TouchableOpacity>
       </View>
+
+      {/* Selected Quest Bottom Card */}
+      {selectedQuest && (
+        <View style={{ position: 'absolute', bottom: 20, left: 20, right: 20, backgroundColor: colors.bgCard, borderRadius: 16, padding: 16, borderWidth: 1, borderColor: colors.border, elevation: 8, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 10 }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.h2, { color: colors.textMain }]} numberOfLines={1}>{selectedQuest.title}</Text>
+              <Text style={[styles.p, { color: colors.textMuted, marginTop: 4 }]}>₱{selectedQuest.reward} Reward • +{selectedQuest.pts} pts</Text>
+            </View>
+            <TouchableOpacity onPress={() => setSelectedQuest(null)} style={{ padding: 4 }}>
+              <Text style={{ color: colors.textMuted, fontFamily: 'Inter_700Bold', fontSize: 18 }}>✕</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={{ flexDirection: 'row', gap: 12, marginTop: 16 }}>
+            <TouchableOpacity 
+              style={[styles.btn, { flex: 1, backgroundColor: isNavigating ? colors.danger : colors.primaryLight }]} 
+              onPress={() => setIsNavigating(!isNavigating)}
+            >
+              <Navigation color={isNavigating ? "#FFF" : colors.primary} size={18} />
+              <Text style={[styles.btnText, { color: isNavigating ? "#FFF" : colors.primary }]}>
+                {isNavigating ? ' Cancel' : ' Navigate'}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.btn, { flex: 1, backgroundColor: colors.primary }]} 
+              onPress={() => navigation.navigate('QuestDetails', { bounty: selectedQuest })}
+            >
+              <Text style={styles.btnText}>View Quest</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
     </View>
   );
 }
