@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, createContext, useContext } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, Dimensions, ScrollView, Image, ActivityIndicator, Alert, Switch, TextInput, Modal } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Dimensions, ScrollView, Image, ActivityIndicator, Alert, Switch, TextInput, Modal, Platform, Linking } from 'react-native';
 import MapView, { Marker, Polyline } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { CameraView, useCameraPermissions } from 'expo-camera';
@@ -77,9 +77,44 @@ function MapScreen({ navigation, route }) {
   const [bounties, setBounties] = useState(INITIAL_QUESTS);
   const [selectedQuest, setSelectedQuest] = useState(null);
   const [isNavigating, setIsNavigating] = useState(false);
+  const [routeCoords, setRouteCoords] = useState([]);
 
   // Mock current location (Naga City Centro)
   const currentLocation = { latitude: 13.621775, longitude: 123.185495 };
+
+  const handleNavigate = async () => {
+    if (!selectedQuest) return;
+
+    if (isNavigating) {
+      setIsNavigating(false);
+      setRouteCoords([]);
+      return;
+    }
+
+    try {
+      const startLon = currentLocation.longitude;
+      const startLat = currentLocation.latitude;
+      const endLon = selectedQuest.lon;
+      const endLat = selectedQuest.lat;
+
+      // Use OSRM public API to get real road routes instead of a straight line
+      const response = await fetch(`https://router.project-osrm.org/route/v1/driving/${startLon},${startLat};${endLon},${endLat}?overview=full&geometries=geojson`);
+      const data = await response.json();
+
+      if (data.routes && data.routes.length > 0) {
+        const coords = data.routes[0].geometry.coordinates.map(coord => ({
+          latitude: coord[1],
+          longitude: coord[0]
+        }));
+        setRouteCoords(coords);
+        setIsNavigating(true);
+      } else {
+        Alert.alert('Route Error', 'No drivable route found.');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to fetch the route.');
+    }
+  };
 
   useEffect(() => {
     if (route.params?.updatedBounty) {
@@ -96,22 +131,22 @@ function MapScreen({ navigation, route }) {
         showsPointsOfInterest={false}
         initialRegion={{ ...currentLocation, latitudeDelta: 0.015, longitudeDelta: 0.015 }}
       >
-        {isNavigating && selectedQuest && (
+        
+        {isNavigating && routeCoords.length > 0 && (
           <Polyline 
-            coordinates={[currentLocation, { latitude: selectedQuest.lat, longitude: selectedQuest.lon }]}
+            coordinates={routeCoords}
             strokeColor={colors.primary}
-            strokeWidth={4}
-            lineDashPattern={[1]}
+            strokeWidth={5}
           />
         )}
-        
+
         {/* User Current Location Marker */}
         <Marker coordinate={currentLocation}>
           <View style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: colors.primary, borderWidth: 3, borderColor: '#FFF', shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 4, elevation: 5 }} />
         </Marker>
 
         {bounties.map(q => (
-          <Marker key={q.id} coordinate={{ latitude: q.lat, longitude: q.lon }} onPress={() => { setSelectedQuest(q); setIsNavigating(false); }}>
+          <Marker key={q.id} coordinate={{ latitude: q.lat, longitude: q.lon }} onPress={() => { setSelectedQuest(q); setIsNavigating(false); setRouteCoords([]); }}>
              <View style={[styles.pin, { backgroundColor: q.status === 'completed' ? colors.textMuted : getSizeColor(q.size, colors.danger), borderColor: colors.bgCard }]}>
                 {q.status === 'completed' ? <CheckCircle color="#FFF" size={16} /> : <MapPin color="#FFF" size={16} />}
              </View>
@@ -151,7 +186,7 @@ function MapScreen({ navigation, route }) {
           <View style={{ flexDirection: 'row', gap: 12, marginTop: 16 }}>
             <TouchableOpacity 
               style={[styles.btn, { flex: 1, backgroundColor: isNavigating ? colors.danger : colors.primaryLight }]} 
-              onPress={() => setIsNavigating(!isNavigating)}
+              onPress={handleNavigate}
             >
               <Navigation color={isNavigating ? "#FFF" : colors.primary} size={18} />
               <Text style={[styles.btnText, { color: isNavigating ? "#FFF" : colors.primary }]}>
@@ -819,9 +854,16 @@ function TabNavigator() {
 
 export default function App() {
   const [isDark, setIsDark] = useState(false);
-  let [fontsLoaded] = useFonts({ Inter_400Regular, Inter_700Bold, Inter_900Black });
+  let [fontsLoaded, fontError] = useFonts({ Inter_400Regular, Inter_700Bold, Inter_900Black });
 
-  if (!fontsLoaded) return null;
+  if (!fontsLoaded && !fontError) {
+    return (
+      <View style={{ flex: 1, backgroundColor: '#1E293B', justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#22C55E" />
+        <Text style={{ color: '#FFF', marginTop: 10 }}>Loading GeoQuest...</Text>
+      </View>
+    );
+  }
 
   return (
     <ThemeContext.Provider value={{ isDark, toggleTheme: () => setIsDark(!isDark), colors: isDark ? darkColors : lightColors }}>
